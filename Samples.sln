@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{45620492-9732-4695-8A8F-4E62B35E2D99}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Extensions", "Extensions", "{5A193D5E-4559-4277-8ED2-A57F75FD9962}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Rpc", "Rpc", "{BD794038-864F-4097-9F21-27BF3504C857}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples.Extensions.Rpc.WebJobs", "src\Extensions\Rpc\WebJobs\Samples.Extensions.Rpc.WebJobs.csproj", "{EE0ECCFF-9AC7-4151-ABC0-D11D30A08D22}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples.Extensions.Rpc.Worker", "src\Extensions\Rpc\Worker\Samples.Extensions.Rpc.Worker.csproj", "{6F069B29-80AA-4F82-94A3-CB3ED28BA8FF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EE0ECCFF-9AC7-4151-ABC0-D11D30A08D22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE0ECCFF-9AC7-4151-ABC0-D11D30A08D22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE0ECCFF-9AC7-4151-ABC0-D11D30A08D22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE0ECCFF-9AC7-4151-ABC0-D11D30A08D22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F069B29-80AA-4F82-94A3-CB3ED28BA8FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F069B29-80AA-4F82-94A3-CB3ED28BA8FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F069B29-80AA-4F82-94A3-CB3ED28BA8FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F069B29-80AA-4F82-94A3-CB3ED28BA8FF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5A193D5E-4559-4277-8ED2-A57F75FD9962} = {45620492-9732-4695-8A8F-4E62B35E2D99}
+		{BD794038-864F-4097-9F21-27BF3504C857} = {5A193D5E-4559-4277-8ED2-A57F75FD9962}
+		{EE0ECCFF-9AC7-4151-ABC0-D11D30A08D22} = {BD794038-864F-4097-9F21-27BF3504C857}
+		{6F069B29-80AA-4F82-94A3-CB3ED28BA8FF} = {BD794038-864F-4097-9F21-27BF3504C857}
+	EndGlobalSection
+EndGlobal
