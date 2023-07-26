@@ -14,7 +14,6 @@ public sealed class Startup : IWebJobsStartup
 {
     public void Configure(IWebJobsBuilder builder)
     {
-        builder.AddExtension<Extension>()
-            .MapGrpcService<GreeterImpl>();
+        builder.AddExtension<Extension>().MapWorkerGrpcService<GreeterImpl>();
     }
 }

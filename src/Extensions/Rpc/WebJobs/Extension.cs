@@ -11,6 +11,6 @@ public sealed class Extension : IExtensionConfigProvider
 {
     public void Initialize(ExtensionConfigContext context)
     {
-        throw new NotImplementedException();
+        // no op.
     }
 }
