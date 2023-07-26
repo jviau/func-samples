@@ -1,5 +1,5 @@
-// "Copyright (c) Jacob Viau. All rights reserved.
-// Licensed under the MIT. See LICENSE file in the project root for full license information."
+// Copyright (c) Jacob Viau. All rights reserved.
+// Licensed under the MIT. See LICENSE file in the project root for full license information.
 
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Rpc;
