@@ -19,9 +19,9 @@
   <!-- This tells the .NET Isolated Worker SDK which WebJobs extension this package depends on -->
   <ItemGroup>
     <AssemblyAttribute Include="Microsoft.Azure.Functions.Worker.Extensions.Abstractions.ExtensionInformationAttribute">
-      <_Parameter1>Sample.Extensions.Rpc.WebJobs</_Parameter1>
-      <_Parameter2>1.0.0</_Parameter2>
-      <_Parameter3>true</_Parameter3>
+      <_Parameter1>Sample.Extensions.Rpc.WebJobs</_Parameter1> <!-- Replace with your public WebJobs package ID -->
+      <_Parameter2>1.0.0</_Parameter2> <!-- Replace with your public WebJobs package version -->
+      <_Parameter3>true</_Parameter3> <!-- This and next line is only needed if your worker extension does not include triggers or bindings. -->
       <_Parameter3_IsLiteral>true</_Parameter3_IsLiteral>
     </AssemblyAttribute>
   </ItemGroup>
