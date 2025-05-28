@@ -12,21 +12,21 @@ builder.ConfigureFunctionsWebApplication();
     .AddApplicationInsightsTelemetryWorkerService()
     .ConfigureFunctionsApplicationInsights();
 
-builder.Services.AddSingleton<StartupWork>();
+builder.Services.AddSingleton<StartupEager>();
 
 // This hosted service shows how to do asynchronous startup work.
 // In this approach the initialization work is only BEGUN as part of
 // worker startup. That work is then later 'joined' when it is finally needed.
 // This means it is warming up in the background, but not delaying worker start.
-builder.Services.AddSingleton<StartupService>();
-builder.Services.AddHostedService(sp => sp.GetRequiredService<StartupService>());
+builder.Services.AddSingleton<StartupLazy>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<StartupLazy>());
 
 IHost host = builder.Build();
 
 // Perform any initialization work before calling host.RunAsync
 // This example uses 'StartupWork' to simulate some singleton
 // which needs asynchronous initialization at startup.
-StartupWork startup = host.Services.GetRequiredService<StartupWork>();
+StartupEager startup = host.Services.GetRequiredService<StartupEager>();
 await startup.InitializeAsync();
 
 // Functions host won't consider this worker ready for invocations until this

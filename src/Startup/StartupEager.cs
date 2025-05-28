@@ -1,11 +1,11 @@
 namespace Samples.Startup;
 
-public class StartupWork
+public class StartupEager
 {
     private readonly Lazy<Task> _initialization;
     private object? _value;
 
-    public StartupWork()
+    public StartupEager()
     {
         _initialization = new(InitializeCoreAsync);
     }

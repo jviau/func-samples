@@ -7,11 +7,11 @@ namespace Samples.Startup;
 // as part of startup, but don't necessarily need it ready by the time the
 // first function invocation comes in. But it will still be an improvement
 // over initializing only when first invocation comes in.
-public class StartupService : IHostedService
+public class StartupLazy : IHostedService
 {
     private readonly Lazy<Task<object>> _initialization;
 
-    public StartupService()
+    public StartupLazy()
     {
         _initialization = new(InitializeCoreAsync);
     }
