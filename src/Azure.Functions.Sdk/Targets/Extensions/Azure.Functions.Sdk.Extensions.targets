@@ -1,0 +1,144 @@
+<!--
+***********************************************************************************************
+Azure.Functions.Sdk.Extensions.targets
+
+WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have
+          created a backup copy.  Incorrect changes to this file will make it
+          impossible to load or build your projects from the command-line or the IDE.
+
+***********************************************************************************************
+-->
+
+<Project>
+
+  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).ResolveExtensionPackages" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
+  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).ValidateExtensionPackages" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
+  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).WriteExtensionProject" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
+  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).CalculateUnusedExtensionPackages" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
+  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).GenerateWebJobsMetadata" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
+
+  <PropertyGroup>
+    <_FunctionsPackageHashPath>$(AzureFunctionsExtensionProjectDirectory)azure_functions.package.hash</_FunctionsPackageHashPath>
+    <_FunctionsIntermediateExtensionJsonPath>$(IntermediateOutputPath)$(_FunctionsExtensionsJsonName)</_FunctionsIntermediateExtensionJsonPath>
+    <_FunctionsUnusedPackagesCachePath>$(AzureFunctionsExtensionProjectDirectory)azure_functions.unused_packages.cache</_FunctionsUnusedPackagesCachePath>
+  </PropertyGroup>
+
+  <Target Name="GenerateFunctionsExtensionProject"
+    Condition="'$(DesignTimeBuild)' != 'true'"
+    AfterTargets="Restore"
+    DependsOnTargets="ResolveExtensionPackages;WriteExtensionProject;RestoreExtensionProject"/>
+
+  <Target Name="PrepareFunctionsExtensionPayload"
+    Condition="'$(DesignTimeBuild)' != 'true'"
+    BeforeTargets="GetCopyToOutputDirectoryItems"
+    AfterTargets="CoreCompile"
+    DependsOnTargets="ResolveExtensionPackages;GetFunctionsExtensionFiles;GenerateWebJobsMetadata;AssignFunctionsTargetPaths">
+  </Target>
+
+  <Target Name="ResolveExtensionPackages">
+    <ConvertToAbsolutePath Paths="$(RestoreOutputPath)">
+      <Output TaskParameter="AbsolutePaths" PropertyName="RestoreOutputAbsolutePath" />
+    </ConvertToAbsolutePath>
+    <ResolveExtensionPackages RestoreOutputPath="$(RestoreOutputAbsolutePath)">
+      <Output TaskParameter="ExtensionPackages" ItemName="AzureFunctionPackageReference" />
+    </ResolveExtensionPackages>
+  </Target>
+
+  <Target Name="WriteExtensionProject">
+    <ValidateExtensionPackages ExtensionPackages="@(AzureFunctionPackageReference)">
+      <Output TaskParameter="FilteredPackages" ItemName="_FilteredAzureFunctionPackageReference" />
+    </ValidateExtensionPackages>
+    <MakeDir Directories="$(AzureFunctionsExtensionProjectDirectory)" Condition="!Exists('$(AzureFunctionsExtensionProjectDirectory)')" />
+    <WriteExtensionProject
+      ExtensionPackages="@(_FilteredAzureFunctionPackageReference)"
+      ProjectPath="$(AzureFunctionsExtensionProjectPath)"
+      HashFilePath="$(_FunctionsPackageHashPath)" />
+  </Target>
+
+  <Target Name="RestoreExtensionProject">
+    <MSBuild Projects="$(AzureFunctionsExtensionProjectPath)"
+             Targets="Restore"
+             RemoveProperties="$(FunctionsExtensionRemoveProps)"
+             Properties="IsRestoring=true;RestoreSources=$(_OutputSources)" />
+  </Target>
+
+  <Target Name="_GetWorkerAssemblies">
+    <ItemGroup>
+      <_WorkerAssemblies Include="$(TargetPath)" />
+      <_WorkerAssemblies Include="@(ReferencePath)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CalculateUnusedExtensionPackagesNoCache"
+    Inputs="@(_WorkerAssemblies);$(_FunctionsPackageHashPath)"
+    Outputs="$(_FunctionsUnusedPackagesCachePath)"
+    DependsOnTargets="_GetWorkerAssemblies">
+    <ValidateExtensionPackages ExtensionPackages="@(AzureFunctionPackageReference)">
+      <Output TaskParameter="FilteredPackages" ItemName="_FilteredAzureFunctionPackageReference" />
+    </ValidateExtensionPackages>
+
+    <CalculateUnusedExtensionPackages
+      ExtensionPackages="@(_FilteredAzureFunctionPackageReference)"
+      WorkerAssemblies="@(_WorkerAssemblies)"
+      CachePath="$(_FunctionsUnusedPackagesCachePath)">
+      <Output TaskParameter="UnusedExtensionPackages" ItemName="_UnusedAzureFunctionPackageReference" />
+    </CalculateUnusedExtensionPackages>
+  </Target>
+
+  <Target Name="_CalculateUnusedExtensionPackagesFromCache"
+    Condition="'@(_UnusedAzureFunctionPackageReference)' == ''">
+    <ReadLinesFromFile File="$(_FunctionsUnusedPackagesCachePath)">
+      <Output TaskParameter="Lines" ItemName="_UnusedAzureFunctionPackageReference" />
+    </ReadLinesFromFile>
+  </Target>
+
+  <Target Name="_CalculateUnusedExtensionPackages"
+    DependsOnTargets="_CalculateUnusedExtensionPackagesNoCache;_CalculateUnusedExtensionPackagesFromCache"
+    Returns="@(_UnusedAzureFunctionPackageReference)" />
+
+  <Target Name="GetFunctionsExtensionFiles" DependsOnTargets="_CalculateUnusedExtensionPackages">
+    <PropertyGroup>
+      <_FunctionsExtensionProperties>UnusedExtensionPackages=@(_UnusedAzureFunctionPackageReference, '%3B')</_FunctionsExtensionProperties>
+    </PropertyGroup>
+
+    <MSBuild Projects="$(AzureFunctionsExtensionProjectPath)"
+             Targets="ResolveFunctionsExtensionFiles"
+             RemoveProperties="$(_FunctionsExtensionRemoveProps)"
+             Properties="$(_FunctionsExtensionProperties)">
+      <Output TaskParameter="TargetOutputs" ItemName="_FunctionsExtensionsOutputItems" />
+    </MSBuild>
+    <ItemGroup>
+      <_NoneWithTargetPath Include="@(_FunctionsExtensionsOutputItems)" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CalculateFunctionsExtensionAssemblies">
+    <ItemGroup>
+      <_FunctionsExtensionAssemblies Include="@(_FunctionsExtensionsOutputItems->WithMetadataValue('AssetType', 'runtime'))" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="GenerateWebJobsMetadata"
+    Inputs="@(_FunctionsExtensionAssemblies)"
+    Outputs="$(_FunctionsIntermediateExtensionJsonPath)"
+    DependsOnTargets="_CalculateFunctionsExtensionAssemblies">
+    <GenerateWebJobsMetadata
+      OutputPath="$(_FunctionsIntermediateExtensionJsonPath)"
+      ExtensionReferences="@(_FunctionsExtensionAssemblies)" />
+  </Target>
+
+  <Target Name="AssignFunctionsTargetPaths">
+    <ItemGroup>
+      <_NoneWithTargetPath Include="$(_FunctionsIntermediateExtensionJsonPath)"
+        CopyToOutputDirectory="PreserveNewest"
+        TargetPath="$(_FunctionsExtensionsJsonName)" />
+      <EmbedInBinlog Include="$(_FunctionsIntermediateExtensionJsonPath)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CleanFunctionsExtensionFiles" BeforeTargets="Clean">
+    <Delete Files="$(_FunctionsIntermediateExtensionJsonPath)" ContinueOnError="true" />
+    <RemoveDir Directories="$(AzureFunctionsExtensionProjectDirectory)" ContinueOnError="true" />
+  </Target>
+
+</Project>

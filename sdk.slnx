@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Azure.Functions.Sdk/Azure.Functions.Sdk.csproj" />
+    <Project Path="src/TestProj/TestProj.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Azure.Functions.Sdk.Tests/Azure.Functions.Sdk.Tests.csproj" />
+  </Folder>
+</Solution>

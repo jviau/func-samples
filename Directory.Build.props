@@ -1,9 +1,27 @@
 <Project>
 
+  <!-- artifacts -->
+  <PropertyGroup>
+    <ArtifactsPath>$(MSBuildThisFileDirectory)out</ArtifactsPath>
+    <ArtifactsPublishOutputName>pub</ArtifactsPublishOutputName>
+    <ArtifactsPackageOutputName>pkg</ArtifactsPackageOutputName>
+  </PropertyGroup>
+
+   <!-- paths -->
+  <PropertyGroup>
+    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
+    <EngRoot>$(RepoRoot)eng/</EngRoot>
+    <EngBuildRoot>$(EngRoot)build/</EngBuildRoot>
+    <EngResourceRoot>$(EngRoot)res/</EngResourceRoot>
+    <SrcRoot>$(RepoRoot)src/</SrcRoot>
+    <TestRoot>$(RepoRoot)test/</TestRoot>
+  </PropertyGroup>
+
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
-    <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NoWarn>$(NoWarn);TA001</NoWarn>
   </PropertyGroup>
 
 </Project>

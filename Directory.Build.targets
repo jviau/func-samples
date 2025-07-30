@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <!-- <ThisAssemblyNamespace>$(RootNamespace)</ThisAssemblyNamespace> -->
+  </PropertyGroup>
+</Project>

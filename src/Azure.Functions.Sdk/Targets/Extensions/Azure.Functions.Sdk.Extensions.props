@@ -1,0 +1,34 @@
+<!--
+***********************************************************************************************
+Azure.Functions.Sdk.Extensions.props
+
+WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have
+          created a backup copy.  Incorrect changes to this file will make it
+          impossible to load or build your projects from the command-line or the IDE.
+
+***********************************************************************************************
+-->
+
+<Project>
+
+  <PropertyGroup>
+    <AzureFunctionsExtensionProjectDirectory Condition="'$(AzureFunctionsExtensionProjectDirectory)' == ''">$(BaseIntermediateOutputPath)azure_functions/</AzureFunctionsExtensionProjectDirectory>
+    <AzureFunctionsExtensionProjectPath Condition="'$(AzureFunctionsExtensionProjectPath)' == ''">$(AzureFunctionsExtensionProjectDirectory)$(AzureFunctionsExtensionProjectName)</AzureFunctionsExtensionProjectPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <_FunctionsExtensionRemoveProps>TargetFramework;RuntimeIdentifier;SelfContained;PublishSingleFile;PublishReadyToRun;UseCurrentRuntimeIdentifier;WebPublishMethod;PublishProfile;DeployOnBuild;PublishDir;OutDir;OutputPath;ManagePackageVersionsCentrally;</_FunctionsExtensionRemoveProps>
+    <_FunctionsExtensionsDirectory>.azurefunctions</_FunctionsExtensionsDirectory>
+    <_FunctionsExtensionsJsonName>extensions.json</_FunctionsExtensionsJsonName>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <AzureFunctionPackageReference>
+      <Version />
+      <SourcePackageId />
+      <IsImplicitlyDefined />
+      <CanTrim />
+    </AzureFunctionPackageReference>
+  </ItemDefinitionGroup>
+
+</Project>
