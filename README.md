@@ -22,6 +22,41 @@ Cons:
 
 Why do this migration? Today the inner build, which we use to resolve the webjobs extensions payload, is problematic for customers for a few reasons. The primary reason is network isolation and that we perform a restore during build. Due to our targets today only being present _AFTER_ restore completes, there is next to nothing we can do to influence restore behavior. With an MSBuild SDK we have options, and this repo demonstrates that. We now generate and restore the inner build project as part of the outer restore phase!
 
+## Behavior
+
+Legend:
+- Enclosed in `[]`: Existing target from `Microsoft.NET.Sdk` (these are also marked with red outline or red background)
+- Blue background: target ran in inner project
+
+``` mermaid
+gantt
+    title Azure.Functions.Sdk
+    dateFormat X
+    axisFormat %S
+    section Restore
+      [Restore]                          :crit, restore, 0, 100s
+      GenerateFunctionsExtensionProject  :after restore, 120s
+      ResolveExtensionPackages           :resolve, after restore, 80s
+      WriteExtensionProject              :write, after resolve, 10s
+      RestoreExtensionProject            :inner-restore, after write, 30s
+      restore inner                      :crit, active, after write, 30s
+    section Build
+      [CoreCompile]                      :crit, core, 0, 150s
+      PrepareFunctionsExtensionPayload   :310s
+      ResolveExtensionPackages           :resolve, after core, 80s
+      _CalculateUnusedExtensionPackages  :calc, after resolve, 80s
+      GetFunctionsExtensionFiles         :outer-get, after calc, 100s
+      GetFunctionsExtensionFiles inner   :active, inner-get, after calc, 100s
+      _ResolveUsedExtensionPackages      :active, used, after calc, 20s
+      [ResolveReferences]                :crit, active, inner-resolve, after used, 40s
+      [GenerateBuildDependencyFile]      :crit, active, deps, after inner-resolve, 20s
+      [GetCopyToOutputDirectoryItems]    :crit, active, after deps, 10s
+      GenerateWebJobsMetadata            :gen, after inner-get, 40s
+      AssignFunctionsTargetPaths         :assign, after gen, 10s
+      [GetCopyToOutputDirectoryItems]    :crit, copy, after assign, 10s
+```
+
+
 ## Drawbacks
 
 ### Inconsistent Post-Restore Hook Support
