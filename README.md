@@ -24,6 +24,53 @@ Why do this migration? Today the inner build, which we use to resolve the webjob
 
 ## Behavior
 
+### Restore Sequence
+
+1. `Restore`
+2. (after restore) `ResolveExtensionPackages`
+   1. Loads `project.assets.json` (via `NuGet.ProjectModel`)
+   2. Scans all reference assemblies from packages, looking for `ExtensionInformationAttribute` (via `Mono.Cecil`)
+      1. Skips packages that are known to never contain an extension
+   3. Returns all found webjobs extensions
+3. `WriteExtensionProject`
+   1. Calculates a hash of included webjobs extensions
+   2. Compares with existing on-disk hash, if any
+   3. Writes `azure_functions.g.csproj` if hash does not match
+4. `RestoreExtensionProject`
+   1. Invokes `Restore` target on `azure_functions.g.csproj`
+
+### Build Sequence
+
+1. `CoreCompile`
+2. (after CoreCompile) `ResolveExtensionPackages`
+   1. Same target as from restore sequence.
+3. `_CalculateUnusedExtensionPackages`
+   1. Scans all referenced assemblies, looking for binding usage.
+   2. Identifies worker packages which are NOT used, then maps that to WebJobs packages which can be trimmed.
+4. `GetFunctionsExtensionFiles`
+   1. Invokes `GetFunctionsExtensionFiles` on `azure_functions.g.csproj`, passing in unused extensions
+      1. `_ResolveUsedExtensionPackages`
+         1. Identifies what WebJobs packages are used **AND** all necessary transitive package references
+         2. Removes known "runtime" packages (packages we know the host controls loading of the contained assemblies)
+      2. `ResolveReferences`
+         1. Resolves all copy-local assemblies
+      3. `GenerateBuildDependencyFile`
+         1. Generates the deps.json file, this will become `function.deps.json`
+      4. `GetCopyToOutputDirectoryItems`
+         1. Collects any additional files to copy to output directory (incase an extension has extra content)
+      5. `GenerateWebJobsMetadata`
+      6. Finally aggregates all files, assign `TargetPath` to them, and returns to outer build
+5. `GenerateWebJobsMetadata`
+   1. Scans `runtime` files (assemblies) from inner build looking for `WebJobsStartupAttribute`
+   2. Generates `extensions.json`, with hint path added.
+6. `AssignFunctionsTargetPaths`
+   1. Assigns `TargetPath` to the `extension.json` item
+   2. Adds all extension files to `_NoneWithTargetPath` item group
+7. `GetCopyToOutputDirectoryItems`
+   1. Will now include all extension files, meaning when `CopyFilesToOutputDirectory` or `CopyFilesToPublishDirectory` run, they will copy over our SDK's output as well.
+
+#### Sequence Diagram
+
 Legend:
 - Enclosed in `[]`: Existing target from `Microsoft.NET.Sdk` (these are also marked with red outline or red background)
 - Blue background: target ran in inner project
@@ -39,7 +86,7 @@ gantt
       ResolveExtensionPackages           :resolve, after restore, 80s
       WriteExtensionProject              :write, after resolve, 10s
       RestoreExtensionProject            :inner-restore, after write, 30s
-      restore inner                      :crit, active, after write, 30s
+      [Restore] inner                      :crit, active, after write, 30s
     section Build
       [CoreCompile]                      :crit, core, 0, 150s
       PrepareFunctionsExtensionPayload   :310s
@@ -80,6 +127,7 @@ This refactor has also had some decent wins with improving the entire inner buil
 
 1. We no longer use `Microsoft.NET.Sdk.Functions` at all. Instead, the inner project also uses `Azure.Functions.Sdk`. During evaluation of the inner project, the SDK will detect it is the generated project (recognized by name "azure_functions.g.csproj") and shift its import graph.
 2. We no longer even _build_ the inner project. Instead, we call a target `ResolveFunctionsExtensionFiles` on it which will return the exact set of files to include in the `.azurefunctions` folder (and the `function.deps.json`).
+   - This means we have less file copying. We copy directly from the nuget package location on disk instead of the inner projects build output.
 3. Generating of `extensions.json` is now done in the outer project, scanning the resolved extension files directly.
 4. Modifying inner-build packages now possible via msbuild items.
    - Targets can add or remove from the `AzureFunctionPackageReference` item group to manually control the inner project.
@@ -96,3 +144,5 @@ This refactor has also had some decent wins with improving the entire inner buil
    - Our SDK can technically have a `<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="[LATESTVERSION]" IsImplicitlyDefined="true" />` defined in its targets.
    - The `IsImplicitlyDefined="true"` is the secret sauce. This package ref will be dropped silently if a customer ever defines it themselves.
    - This ultimately makes a customer manually including our packages _optional_.
+4. `ExtensionInformationAttribute` alternative. Since we are walking `project.assets.json`, which tells us all files a nuget package have, we could design a convention where worker packages could add an `azure_functions.extensions.json` or similar file, which we will read and add extensions from. This will be significantly more performant than scanning assemblies.
+5. Lack of multi-targeting support. This prototype does not support multi-TFM's yet. We currently generate only 1 `azure_functions.g.csproj` for all TFM's. This currently cannot handle divergences in the set of extensions between TFMs.
