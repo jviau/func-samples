@@ -9,7 +9,7 @@ namespace Azure.Functions.Sdk;
 
 public partial class WebJobsReference
 {
-    private const string ExtensionsBinaryDirectoryPath = @"./.azurefunctions";
+    private const string ExtensionsBinaryDirectoryPath = $@"./{Constants.ExtensionsOutputFolder}";
     private const string WebJobsStartupAttributeType = "Microsoft.Azure.WebJobs.Hosting.WebJobsStartupAttribute";
 
     /// <summary>

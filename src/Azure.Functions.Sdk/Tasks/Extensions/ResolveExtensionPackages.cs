@@ -8,7 +8,7 @@ using NuGet.LibraryModel;
 using NuGet.Packaging;
 using NuGet.ProjectModel;
 
-namespace Azure.Functions.Sdk.Tasks;
+namespace Azure.Functions.Sdk.Tasks.Extensions;
 
 public class ResolveExtensionPackages(IFileSystem fileSystem)
     : Microsoft.Build.Utilities.Task, ICancelableTask, IDisposable

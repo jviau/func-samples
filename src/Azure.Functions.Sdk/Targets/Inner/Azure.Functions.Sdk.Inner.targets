@@ -13,8 +13,8 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
 
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
   
-  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).ResolveUsedExtensionPackages" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
-  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).ResolveExtensionCopyLocal" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
+  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).Inner.ResolveUsedExtensionPackages" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
+  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).Inner.ResolveExtensionCopyLocal" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
 
   <!--
     This target is a safeguard to ensure that the target framework is not overridden by a global property.
@@ -42,8 +42,7 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
     </ItemGroup>
   </Target>
 
-  <Target Name="ResolveFunctionsExtensionFiles"
-    DependsOnTargets="_ResolveUsedExtensionPackages;ResolveReferences;GenerateBuildDependencyFile;GetCopyToOutputDirectoryItems"
+  <Target Name="ResolveFunctionsExtensionFiles" DependsOnTargets="_ResolveUsedExtensionPackages;ResolveReferences;GenerateBuildDependencyFile;GetCopyToOutputDirectoryItems"
     Returns="@(FunctionsExtensionFiles)">
     <ResolveExtensionCopyLocal UsedPackages="@(_UsedExtensionPackage)" RuntimeAssemblies="@(_FunctionsRuntimeAssembly)" CopyLocalFiles="@(ReferenceCopyLocalPaths)">
       <Output TaskParameter="ExtensionsCopyLocal" ItemName="FunctionsExtensionFiles" />

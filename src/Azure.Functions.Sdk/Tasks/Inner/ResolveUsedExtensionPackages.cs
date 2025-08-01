@@ -3,14 +3,13 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.IO.Abstractions;
-using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NuGet.LibraryModel;
 using NuGet.Packaging.Core;
 using NuGet.ProjectModel;
 
-namespace Azure.Functions.Sdk.Tasks;
+namespace Azure.Functions.Sdk.Tasks.Inner;
 
 public class ResolveUsedExtensionPackages(IFileSystem fileSystem) : Microsoft.Build.Utilities.Task
 {

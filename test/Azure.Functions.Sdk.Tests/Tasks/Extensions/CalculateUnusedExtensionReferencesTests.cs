@@ -6,7 +6,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Moq;
 
-namespace Azure.Functions.Sdk.Tasks.Tests;
+namespace Azure.Functions.Sdk.Tasks.Extensions.Tests;
 
 public class CalculateUnusedExtensionReferencesTests
 {

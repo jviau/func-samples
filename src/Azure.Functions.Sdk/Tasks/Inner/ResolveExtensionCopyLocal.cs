@@ -3,7 +3,7 @@
 
 using Microsoft.Build.Framework;
 
-namespace Azure.Functions.Sdk.Tasks;
+namespace Azure.Functions.Sdk.Tasks.Inner;
 
 public class ResolveExtensionCopyLocal : Microsoft.Build.Utilities.Task
 {
@@ -32,7 +32,7 @@ public class ResolveExtensionCopyLocal : Microsoft.Build.Utilities.Task
                 && !runtimeAssemblyNames.Contains(Path.GetFileName(item.ItemSpec)))
             {
                 string destination = item.GetMetadata("DestinationSubPath");
-                item.SetMetadata("TargetPath", Path.Combine(".azurefunctions", destination));
+                item.SetMetadata("TargetPath", Path.Combine(Constants.ExtensionsOutputFolder, destination));
                 extensionsCopyLocal.Add(item);
             }
         }

@@ -12,8 +12,81 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
 <Project>
 
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
+  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).FuncSdkLog" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
+  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).GenerateWorkerConfig" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
 
   <Import Project="$(MSBuildThisFileDirectory)publish/Azure.Functions.Sdk.Publish.targets" />
   <Import Project="$(MSBuildThisFileDirectory)extensions/Azure.Functions.Sdk.Extensions.targets" />
+
+  <PropertyGroup>
+    <_ToolingSuffix Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 1))-isolated</_ToolingSuffix>
+    <_ToolingSuffix Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">netfx-isolated</_ToolingSuffix>
+    <FunctionsToolingSuffix Condition="'$(FunctionsToolingSuffix)' == ''">$(_ToolingSuffix)</FunctionsToolingSuffix>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildFunctionsTargetsPath)Microsoft.Azure.Functions.Designtime.targets"
+          Condition="Exists('$(MSBuildFunctionsTargetsPath)Microsoft.Azure.Functions.Designtime.targets')" />
+
+  <Target Name="_ValidateFunctionsVersion">
+    <PropertyGroup>
+      <_AzureFunctionsVersionStandardized>$(AzureFunctionsVersion.ToLowerInvariant().Split('-')[0])</_AzureFunctionsVersionStandardized>
+      <_MinimumSupportedTfmInFunctions>net8.0</_MinimumSupportedTfmInFunctions>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_AllowedFunctionVersion Include="v3" InSupport="false" /> <!-- Do we want to drop this? -->
+      <_AllowedFunctionVersion Include="v4" InSupport="true" />
+      <_SelectedFunctionVersion Include="@(_AllowedFunctionVersion)" Condition="'%(_AllowedFunctionVersion.Identity)' == '$(_AzureFunctionsVersionStandardized)'" />
+    </ItemGroup>
+
+    <FuncSdkLog Condition="'%(_SelectedFunctionVersion.InSupport)' == 'false'" Resource="EndOfLifeFunctionsVersion" Arguments="$(_AzureFunctionsVersionStandardized)" />
+    <FuncSdkLog Condition="'@(_SelectedFunctionVersion)' == ''" Resource="UnknownFunctionsVersion" Arguments="$(_AzureFunctionsVersionStandardized)" />
+    <FuncSdkLog Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND !$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', '$(_MinimumSupportedTfmInFunctions)'))"
+      Resource="UnsupportedTargetFramework" Arguments="$(_MinimumSupportedTfmInFunctions);$(TargetFramework)" />
+  </Target>
+
+  <Target Name="_FunctionAppValidation" BeforeTargets="Restore;Build" DependsOnTargets="_ValidateFunctionsVersion">
+    <FuncSdkLog Condition="'$(_IsFunctionsSdkBuild)' == 'true'" Resource="UsingLegacyFunctionsSdk" />
+  </Target>
+
+  <Target Name="_FunctionsComputeRunArguments" BeforeTargets="ComputeRunArguments">
+    <Exec Command="func --version" IgnoreExitCode="true">
+      <Output TaskParameter="ExitCode" PropertyName="_FuncCliExitCode" />
+    </Exec>
+
+    <FuncSdkLog Condition="'$(_FuncCliExitCode)' != '0'" Code="ErrorRunningFuncCli" />
+
+    <PropertyGroup Condition="'$(_FuncCliExitCode)' == '0'">
+      <RunCommand>func</RunCommand>
+      <RunArguments>host start $(RunArguments)</RunArguments>
+      <RunWorkingDirectory>$(OutDir)</RunWorkingDirectory>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_PreGenerateWorkerConfig" BeforeTargets="GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
+    Condition="'$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <_WorkerConfigFileName>worker.config.json</_WorkerConfigFileName>
+      <_WorkerConfigOutputPath>$(IntermediateOutputPath)$(_WorkerConfigFileName)</_WorkerConfigOutputPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_NoneWithTargetPath Include="$(_WorkerConfigOutputPath)" TargetPath="$(_WorkerConfigFileName)"
+        CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CoreGenerateWorkerConfig" DependsOnTargets="_PreGenerateWorkerConfig"
+    AfterTargets="CoreCompile"
+    Inputs="@(IntermediateAssembly)" Outputs="$(_WorkerConfigOutputPath)"
+    Condition="'$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <_FunctionsExecutable>dotnet</_FunctionsExecutable>
+      <!-- If self-contained, get the name of the .exe to run. This also covers PublishAot scenarios. -->
+      <_FunctionsExecutable Condition="'$(SelfContained)' == 'true' AND '%(Identity)' == '$(AppHostIntermediatePath)'">{WorkerRoot}%(None.Link)</_FunctionsExecutable>
+      <_FunctionsExecutable Condition="$(TargetFrameworkIdentifier) == '.NETFramework'">{WorkerRoot}$(TargetName)$(TargetExt)</_FunctionsExecutable>
+    </PropertyGroup>
+    <GenerateWorkerConfig Executable="$(_FunctionsExecutable)" TargetFileName="$(TargetFileName)" OutputPath="$(_WorkerConfigOutputPath)" />
+  </Target>
 
 </Project>

@@ -4,7 +4,7 @@
 using System.IO.Abstractions;
 using Microsoft.Build.Framework;
 
-namespace Azure.Functions.Sdk.Tasks;
+namespace Azure.Functions.Sdk.Tasks.Extensions;
 
 public class CalculateUnusedExtensionPackages(IFileSystem fileSystem)
     : Microsoft.Build.Utilities.Task, ICancelableTask, IDisposable
@@ -76,7 +76,7 @@ public class CalculateUnusedExtensionPackages(IFileSystem fileSystem)
     /// <returns>The set of items from <see cref="ExtensionPackages"/> that are used.</returns>
     private IEnumerable<ITaskItem> GetUnusedExtensionPackages()
     {
-        FunctionsAssemblyScanner scanner = new();
+        FunctionsAssemblyScanner scanner = FunctionsAssemblyScanner.FromTaskItems(WorkerAssemblies);
         HashSet<string> usedExtensions = new(StringComparer.OrdinalIgnoreCase);
         Dictionary<string, string> assemblyToPackageMap = new(StringComparer.Ordinal);
         MSBuildNugetLogger logger = new(Log);

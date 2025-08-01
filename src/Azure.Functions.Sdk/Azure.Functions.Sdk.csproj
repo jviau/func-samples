@@ -22,6 +22,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Update="*.resx" EmitFormatMethods="true" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="**/*.props;**/*.targets" Pack="true" LowerCasePath="true" />
   </ItemGroup>
 

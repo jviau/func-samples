@@ -4,7 +4,7 @@
 using Microsoft.Build.Framework;
 using Moq;
 
-namespace Azure.Functions.Sdk.Tasks.Tests;
+namespace Azure.Functions.Sdk.Tasks.Extensions.Tests;
 
 public class ResolveExtensionPackagesTests
 {

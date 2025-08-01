@@ -2,8 +2,9 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System.Text.RegularExpressions;
+using Microsoft.Build.Framework;
 using Mono.Cecil;
-using NuGet.Common;
+using ILogger = NuGet.Common.ILogger;
 
 namespace Azure.Functions.Sdk;
 
@@ -16,13 +17,31 @@ public sealed partial class FunctionsAssemblyScanner
     private readonly FunctionsAssemblyResolver _resolver;
     private readonly ReaderParameters _readerParameters;
 
-    public FunctionsAssemblyScanner()
+    public FunctionsAssemblyScanner(IEnumerable<string>? searchDirectories = null)
     {
         _resolver = new();
         _readerParameters = new ReaderParameters
         {
             AssemblyResolver = _resolver,
         };
+
+        if (searchDirectories != null)
+        {
+            foreach (string directory in searchDirectories)
+            {
+                _resolver.AddSearchDirectory(directory);
+            }
+        }
+    }
+
+    public static FunctionsAssemblyScanner FromTaskItems(IEnumerable<ITaskItem> items)
+    {
+        IEnumerable<string> searchDirectories = items
+            .Select(item => Path.GetDirectoryName(item.ItemSpec))
+            .Where(dir => !string.IsNullOrEmpty(dir))
+            .Distinct();
+
+        return new(searchDirectories);
     }
 
     public static bool IsExcludedPackage(string name)
@@ -39,7 +58,6 @@ public sealed partial class FunctionsAssemblyScanner
     private AssemblyDefinition ReadAssembly(string assemblyPath)
     {
         Throw.IfNullOrEmpty(assemblyPath);
-        _resolver.AddSearchDirectory(Path.GetDirectoryName(assemblyPath));
         return AssemblyDefinition.ReadAssembly(assemblyPath, _readerParameters);
     }
 }

@@ -3,18 +3,13 @@
 
 using System.IO.Abstractions;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 
-namespace Azure.Functions.Sdk.Tasks;
+namespace Azure.Functions.Sdk.Tasks.Extensions;
 
 public partial class GenerateWebJobsMetadata(IFileSystem fileSystem)
     : Microsoft.Build.Utilities.Task, ICancelableTask, IDisposable
 {
-    private static readonly Regex ExcludedWorkerAssembliesRegex = new(
-        @"^(System|Azure\.Core|Azure\.Identity|Microsoft\.Bcl|Microsoft\.Extensions|Microsoft\.Identity|Microsoft\.NETCore|Microsoft\.NETStandard|Microsoft\.Win32|Grpc)\..*",
-        RegexOptions.Compiled);
-
     private static readonly HashSet<string> ExcludedAssemblies = new(StringComparer.OrdinalIgnoreCase)
     {
         "Microsoft.Azure.WebJobs.Extensions.dll",
@@ -67,8 +62,7 @@ public partial class GenerateWebJobsMetadata(IFileSystem fileSystem)
     {
         List<WebJobsReference> references = [];
         MSBuildNugetLogger logger = new(Log);
-
-        FunctionsAssemblyScanner scanner = new();
+        FunctionsAssemblyScanner scanner = FunctionsAssemblyScanner.FromTaskItems(ExtensionReferences);
         foreach (ITaskItem item in GetAssembliesToScan())
         {
             _cts.Token.ThrowIfCancellationRequested();

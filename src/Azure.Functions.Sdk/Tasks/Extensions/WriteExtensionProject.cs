@@ -6,7 +6,7 @@ using System.Text;
 using Microsoft.Build.Framework;
 using NuGet.ProjectModel;
 
-namespace Azure.Functions.Sdk.Tasks;
+namespace Azure.Functions.Sdk.Tasks.Extensions;
 
 public class WriteExtensionProject(IFileSystem fileSystem, TimeProvider time) : Microsoft.Build.Utilities.Task
 {

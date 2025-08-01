@@ -146,3 +146,14 @@ This refactor has also had some decent wins with improving the entire inner buil
    - This ultimately makes a customer manually including our packages _optional_.
 4. `ExtensionInformationAttribute` alternative. Since we are walking `project.assets.json`, which tells us all files a nuget package have, we could design a convention where worker packages could add an `azure_functions.extensions.json` or similar file, which we will read and add extensions from. This will be significantly more performant than scanning assemblies.
 5. Lack of multi-targeting support. This prototype does not support multi-TFM's yet. We currently generate only 1 `azure_functions.g.csproj` for all TFM's. This currently cannot handle divergences in the set of extensions between TFMs.
+
+## TODO
+
+1. ~~Deduplicate `IsImplicitlyDefined` extension packages~~
+2. ~~Add `CollectExtensionPackageReferences`~~
+3. Check if `function.deps.json` can also be "trimmed"
+4. Support multi-TFM
+5. Include analyzers and generators
+6. Port rest of targets
+   - Validation, tool chain resolution
+   - ~~dotnet run support~~

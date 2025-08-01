@@ -11,11 +11,11 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
 
 <Project>
 
-  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).ResolveExtensionPackages" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
-  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).ValidateExtensionPackages" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
-  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).WriteExtensionProject" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
-  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).CalculateUnusedExtensionPackages" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
-  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).GenerateWebJobsMetadata" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
+  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).Extensions.ResolveExtensionPackages" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
+  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).Extensions.ValidateExtensionPackages" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
+  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).Extensions.WriteExtensionProject" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
+  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).Extensions.CalculateUnusedExtensionPackages" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
+  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).Extensions.GenerateWebJobsMetadata" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
 
   <PropertyGroup>
     <_FunctionsPackageHashPath>$(AzureFunctionsExtensionProjectDirectory)azure_functions.package.hash</_FunctionsPackageHashPath>
@@ -23,70 +23,66 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
     <_FunctionsUnusedPackagesCachePath>$(AzureFunctionsExtensionProjectDirectory)azure_functions.unused_packages.cache</_FunctionsUnusedPackagesCachePath>
   </PropertyGroup>
 
-  <Target Name="GenerateFunctionsExtensionProject"
-    Condition="'$(DesignTimeBuild)' != 'true'"
-    AfterTargets="Restore"
-    DependsOnTargets="ResolveExtensionPackages;WriteExtensionProject;RestoreExtensionProject"/>
+  <Target Name="GenerateFunctionsExtensionProject" DependsOnTargets="CollectExtensionPackages;WriteExtensionProject;RestoreExtensionProject"
+    AfterTargets="Restore" 
+    Condition="'$(DesignTimeBuild)' != 'true'" />
 
-  <Target Name="PrepareFunctionsExtensionPayload"
-    Condition="'$(DesignTimeBuild)' != 'true'"
-    BeforeTargets="GetCopyToOutputDirectoryItems"
-    AfterTargets="CoreCompile"
-    DependsOnTargets="ResolveExtensionPackages;GetFunctionsExtensionFiles;GenerateWebJobsMetadata;AssignFunctionsTargetPaths">
+  <Target Name="PrepareFunctionsExtensionPayload" DependsOnTargets="GetFunctionsExtensionFiles;GenerateWebJobsMetadata;AssignFunctionsTargetPaths"
+    AfterTargets="CoreCompile" BeforeTargets="GetCopyToOutputDirectoryItems"
+    Condition="'$(DesignTimeBuild)' != 'true'" />
+
+  <Target Name="PublishFunctionsExtensionPayload"
+    BeforeTargets="GetCopyToPublishDirectoryItems"
+    DependsOnTargets="GetFunctionsExtensionFiles;AssignFunctionsTargetPaths">
   </Target>
 
-  <Target Name="ResolveExtensionPackages">
+  <Target Name="CollectExtensionPackages" Returns="@(AzureFunctionPackageReference)">
     <ConvertToAbsolutePath Paths="$(RestoreOutputPath)">
       <Output TaskParameter="AbsolutePaths" PropertyName="RestoreOutputAbsolutePath" />
     </ConvertToAbsolutePath>
     <ResolveExtensionPackages RestoreOutputPath="$(RestoreOutputAbsolutePath)">
       <Output TaskParameter="ExtensionPackages" ItemName="AzureFunctionPackageReference" />
     </ResolveExtensionPackages>
+    <ValidateExtensionPackages ExtensionPackages="@(AzureFunctionPackageReference)">
+      <Output TaskParameter="FilteredPackages" ItemName="_AzureFunctionPackageReference" />
+    </ValidateExtensionPackages>
+    <ItemGroup>
+      <AzureFunctionPackageReference Remove="@(AzureFunctionPackageReference)" />
+      <AzureFunctionPackageReference Include="@(_AzureFunctionPackageReference)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="WriteExtensionProject">
-    <ValidateExtensionPackages ExtensionPackages="@(AzureFunctionPackageReference)">
-      <Output TaskParameter="FilteredPackages" ItemName="_FilteredAzureFunctionPackageReference" />
-    </ValidateExtensionPackages>
     <MakeDir Directories="$(AzureFunctionsExtensionProjectDirectory)" Condition="!Exists('$(AzureFunctionsExtensionProjectDirectory)')" />
-    <WriteExtensionProject
-      ExtensionPackages="@(_FilteredAzureFunctionPackageReference)"
-      ProjectPath="$(AzureFunctionsExtensionProjectPath)"
+    <WriteExtensionProject ExtensionPackages="@(AzureFunctionPackageReference)" ProjectPath="$(AzureFunctionsExtensionProjectPath)"
       HashFilePath="$(_FunctionsPackageHashPath)" />
   </Target>
 
   <Target Name="RestoreExtensionProject">
-    <MSBuild Projects="$(AzureFunctionsExtensionProjectPath)"
-             Targets="Restore"
-             RemoveProperties="$(FunctionsExtensionRemoveProps)"
-             Properties="IsRestoring=true;RestoreSources=$(_OutputSources)" />
+    <MSBuild Projects="$(AzureFunctionsExtensionProjectPath)" Targets="Restore"
+      RemoveProperties="$(FunctionsExtensionRemoveProps)" Properties="IsRestoring=true;RestoreSources=$(_OutputSources)" />
   </Target>
 
   <Target Name="_GetWorkerAssemblies">
     <ItemGroup>
-      <_WorkerAssemblies Include="$(TargetPath)" />
-      <_WorkerAssemblies Include="@(ReferencePath)" />
+      <_WorkerAssemblies Include="@(IntermediateAssembly);@(ReferencePath)" />
     </ItemGroup>
   </Target>
 
-  <Target Name="_CalculateUnusedExtensionPackagesNoCache"
-    Inputs="@(_WorkerAssemblies);$(_FunctionsPackageHashPath)"
-    Outputs="$(_FunctionsUnusedPackagesCachePath)"
-    DependsOnTargets="_GetWorkerAssemblies">
-    <ValidateExtensionPackages ExtensionPackages="@(AzureFunctionPackageReference)">
-      <Output TaskParameter="FilteredPackages" ItemName="_FilteredAzureFunctionPackageReference" />
-    </ValidateExtensionPackages>
+  <Target Name="_CalculateUnusedExtensionPackagesNoCache" DependsOnTargets="_GetWorkerAssemblies"
+    Inputs="@(_WorkerAssemblies);$(_FunctionsPackageHashPath)" Outputs="$(_FunctionsUnusedPackagesCachePath)">
+    <!-- Using CallTarget so this is not executed in the cache-hit case. -->
+    <CallTarget Targets="CollectExtensionPackages" UseResultsCache="true">
+      <Output TaskParameter="TargetOutputs" ItemName="AzureFunctionPackageReference" />
+    </CallTarget>
 
-    <CalculateUnusedExtensionPackages
-      ExtensionPackages="@(_FilteredAzureFunctionPackageReference)"
-      WorkerAssemblies="@(_WorkerAssemblies)"
-      CachePath="$(_FunctionsUnusedPackagesCachePath)">
+    <CalculateUnusedExtensionPackages ExtensionPackages="@(AzureFunctionPackageReference)"
+      WorkerAssemblies="@(_WorkerAssemblies)" CachePath="$(_FunctionsUnusedPackagesCachePath)">
       <Output TaskParameter="UnusedExtensionPackages" ItemName="_UnusedAzureFunctionPackageReference" />
     </CalculateUnusedExtensionPackages>
   </Target>
 
-  <Target Name="_CalculateUnusedExtensionPackagesFromCache"
-    Condition="'@(_UnusedAzureFunctionPackageReference)' == ''">
+  <Target Name="_CalculateUnusedExtensionPackagesFromCache" Condition="'@(_UnusedAzureFunctionPackageReference)' == ''">
     <ReadLinesFromFile File="$(_FunctionsUnusedPackagesCachePath)">
       <Output TaskParameter="Lines" ItemName="_UnusedAzureFunctionPackageReference" />
     </ReadLinesFromFile>
@@ -108,7 +104,8 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
       <Output TaskParameter="TargetOutputs" ItemName="_FunctionsExtensionsOutputItems" />
     </MSBuild>
     <ItemGroup>
-      <_NoneWithTargetPath Include="@(_FunctionsExtensionsOutputItems)" CopyToOutputDirectory="PreserveNewest" />
+      <_NoneWithTargetPath Include="@(_FunctionsExtensionsOutputItems)"
+        CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
 
@@ -118,20 +115,15 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
     </ItemGroup>
   </Target>
 
-  <Target Name="GenerateWebJobsMetadata"
-    Inputs="@(_FunctionsExtensionAssemblies)"
-    Outputs="$(_FunctionsIntermediateExtensionJsonPath)"
-    DependsOnTargets="_CalculateFunctionsExtensionAssemblies">
-    <GenerateWebJobsMetadata
-      OutputPath="$(_FunctionsIntermediateExtensionJsonPath)"
-      ExtensionReferences="@(_FunctionsExtensionAssemblies)" />
+  <Target Name="GenerateWebJobsMetadata" DependsOnTargets="_CalculateFunctionsExtensionAssemblies"
+    Inputs="@(_FunctionsExtensionAssemblies)" Outputs="$(_FunctionsIntermediateExtensionJsonPath)">
+    <GenerateWebJobsMetadata OutputPath="$(_FunctionsIntermediateExtensionJsonPath)" ExtensionReferences="@(_FunctionsExtensionAssemblies)" />
   </Target>
 
   <Target Name="AssignFunctionsTargetPaths">
     <ItemGroup>
-      <_NoneWithTargetPath Include="$(_FunctionsIntermediateExtensionJsonPath)"
-        CopyToOutputDirectory="PreserveNewest"
-        TargetPath="$(_FunctionsExtensionsJsonName)" />
+      <_NoneWithTargetPath Include="$(_FunctionsIntermediateExtensionJsonPath)" TargetPath="$(_FunctionsExtensionsJsonName)"
+        CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest"/>
       <EmbedInBinlog Include="$(_FunctionsIntermediateExtensionJsonPath)" />
     </ItemGroup>
   </Target>
