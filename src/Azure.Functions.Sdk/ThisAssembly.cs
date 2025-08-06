@@ -15,7 +15,7 @@ internal static partial class ThisAssembly
         /// <summary>
         /// Gets the version of the Azure Functions SDK module.
         /// </summary>
-        public static string Version { get; } = typeof(ThisAssembly).Assembly.GetName().Version?.ToString()!;
+        public static Version Version { get; } = typeof(ThisAssembly).Assembly.GetName().Version!;
 
         /// <summary>
         /// Gets the module version ID of the assembly. This acts as an assembly hash, changing any time the source code changes.

@@ -11,28 +11,20 @@ using Logger = Microsoft.Build.Utilities.TaskLoggingHelper;
 
 namespace Azure.Functions.Sdk.ZipDeploy;
 
-public partial class DeploymentClient(Uri endpoint, Logger? logger = null)
+public partial class DeploymentClient(HttpClient client, Logger? logger = null)
 {
     private const int RetryCount = 3;
-    private static readonly HttpClient DefaultClient = new();
     private static readonly TimeSpan StatusRefreshDelay = TimeSpan.FromSeconds(3);
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(1);
 
-    private readonly Uri _endpoint = Throw.IfNull(endpoint);
     private readonly Logger? _logger = logger;
-    private readonly HttpClient? _client;
-
-    internal HttpClient Client
-    {
-        get => _client ?? DefaultClient;
-        init => _client = Throw.IfNull(value, nameof(Client));
-    }
+    private readonly HttpClient _client = client;
 
     public virtual async Task<DeployStatus> ZipDeployAsync(ZipDeployRequest request, CancellationToken cancellation)
     {
         Throw.IfNull(request);
-        using HttpRequestMessage httpRequest = request.CreateRequestMessage(_endpoint);
-        using HttpResponseMessage response = await Client.SendAsync(httpRequest, cancellation);
+        using HttpRequestMessage httpRequest = request.CreateRequestMessage();
+        using HttpResponseMessage response = await _client.SendAsync(httpRequest, cancellation);
         StatusResult status = await StatusResult.ParseAsync(response, cancellation);
 
         if (response.Headers.Location is Uri location)
@@ -75,7 +67,7 @@ public partial class DeploymentClient(Uri endpoint, Logger? logger = null)
         {
             try
             {
-                using HttpResponseMessage response = await Client.GetAsync(location, cancellation);
+                using HttpResponseMessage response = await _client.GetAsync(location, cancellation);
                 return await StatusResult.ParseAsync(response, cancellation);
             }
             catch (DeploymentException ex)

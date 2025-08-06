@@ -3,8 +3,8 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.IO.Abstractions;
-using System.Net;
-using System.Text;
+using System.Net.Http.Headers;
+using System.Runtime.InteropServices;
 using Azure.Functions.Sdk.ZipDeploy;
 using Microsoft.Build.Framework;
 
@@ -17,6 +17,11 @@ namespace Azure.Functions.Sdk.Tasks.Publish;
 public class ZipDeployTask(IFileSystem fileSystem)
     : Microsoft.Build.Utilities.Task, ICancelableTask, IDisposable
 {
+    private static readonly ProductInfoHeaderValue SdkUserAgentHeader = new(
+        ThisAssembly.Info.Name, ThisAssembly.Info.Version.ToString(fieldCount: 3));
+    private static readonly ProductInfoHeaderValue OsUserAgentHeader = new(
+        $"({RuntimeInformation.OSDescription}; {RuntimeInformation.OSArchitecture})");
+
     private readonly CancellationTokenSource _cts = new();
     private readonly IFileSystem _fileSystem = Throw.IfNull(fileSystem);
     private DeploymentClient? _deploymentClient;
@@ -43,6 +48,8 @@ public class ZipDeployTask(IFileSystem fileSystem)
 
     [Required]
     public string PublishUrl { get; set; } = string.Empty;
+
+    public string DotnetSdkVersion { get; set; } = "<unknown>";
 
     public bool UseBlobContainerDeploy { get; set; }
 
@@ -121,7 +128,17 @@ public class ZipDeployTask(IFileSystem fileSystem)
             return false;
         }
 
-        _deploymentClient = new(publishUri, Log);
+        ProductInfoHeaderValue dotnetSdkHeader = new("Microsoft.NET.Sdk", DotnetSdkVersion);
+        HttpClient client = new()
+        {
+            BaseAddress = publishUri,
+            DefaultRequestHeaders =
+            {
+                UserAgent = { SdkUserAgentHeader, dotnetSdkHeader, OsUserAgentHeader }
+            },
+        };
+
+        _deploymentClient = new(client, Log);
         return true;
     }
 

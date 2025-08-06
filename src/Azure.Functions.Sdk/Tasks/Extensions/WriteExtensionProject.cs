@@ -118,7 +118,7 @@ public class WriteExtensionProject(IFileSystem fileSystem, TimeProvider time) : 
         using HashObjectWriter hash = new(algorithm);
 
         // Verify if the tooling has changed.
-        hash.WriteNameValue("version", ThisAssembly.Info.Version);
+        hash.WriteNameValue("version", ThisAssembly.Info.Version.ToString());
         hash.WriteNameValue("moduleId", ThisAssembly.Info.ModuleVersionId);
 
         hash.WriteArrayStart("packages");

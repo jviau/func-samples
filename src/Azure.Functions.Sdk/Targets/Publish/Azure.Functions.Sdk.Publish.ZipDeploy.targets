@@ -47,7 +47,8 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
 
     <ZipDeploy ZipContentsPath="$(ZippedPublishContentsPath)" PublishUrl="$(_ZipPublishUrl)"
       DeploymentUsername="$(UserName)" DeploymentPassword="$(Password)"
-      UseBlobContainerDeploy="$(UseBlobContainerDeploy)"/>
+      UseBlobContainerDeploy="$(UseBlobContainerDeploy)"
+      DotnetSdkVersion="$(NETCoreSdkVersion)" /> <!-- For user agent header -->
   </Target>
 
 </Project>
