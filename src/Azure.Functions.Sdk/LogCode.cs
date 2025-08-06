@@ -13,21 +13,21 @@ namespace Azure.Functions.Sdk;
 /// <param name="id">The resource identifier for the log message.</param>
 internal readonly struct LogCode(LogLevel level, string id)
 {
-    public static LogCode ErrorRunningFuncCli => new(LogLevel.Error, nameof(ErrorRunningFuncCli));
+    public static LogCode ErrorRunningFuncCli => new(LogLevel.Error, nameof(Strings.ErrorRunningFuncCli));
 
-    public static LogCode ExtensionPackageConflict => new(LogLevel.Error, nameof(ExtensionPackageConflict));
+    public static LogCode ExtensionPackageConflict => new(LogLevel.Error, nameof(Strings.ExtensionPackageConflict));
 
-    public static LogCode ExtensionPackageDuplicate => new(LogLevel.Warning, nameof(ExtensionPackageDuplicate));
+    public static LogCode ExtensionPackageDuplicate => new(LogLevel.Warning, nameof(Strings.ExtensionPackageDuplicate));
 
-    public static LogCode InvalidExtensionPackageVersion => new(LogLevel.Error, nameof(InvalidExtensionPackageVersion));
+    public static LogCode InvalidExtensionPackageVersion => new(LogLevel.Error, nameof(Strings.InvalidExtensionPackageVersion));
 
-    public static LogCode EndOfLifeFunctionsVersion => new(LogLevel.Warning, nameof(EndOfLifeFunctionsVersion));
+    public static LogCode EndOfLifeFunctionsVersion => new(LogLevel.Warning, nameof(Strings.EndOfLifeFunctionsVersion));
 
-    public static LogCode UsingLegacyFunctionsSdk => new(LogLevel.Error, nameof(UsingLegacyFunctionsSdk));
+    public static LogCode UsingLegacyFunctionsSdk => new(LogLevel.Error, nameof(Strings.UsingLegacyFunctionsSdk));
 
-    public static LogCode UnknownFunctionsVersion => new(LogLevel.Error, nameof(UnknownFunctionsVersion));
+    public static LogCode UnknownFunctionsVersion => new(LogLevel.Error, nameof(Strings.UnknownFunctionsVersion));
 
-    public static LogCode UnsupportedTargetFramework => new(LogLevel.Error, nameof(UnsupportedTargetFramework));
+    public static LogCode UnsupportedTargetFramework => new(LogLevel.Error, nameof(Strings.UnsupportedTargetFramework));
 
     public LogLevel Level => level;
 

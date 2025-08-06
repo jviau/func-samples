@@ -15,24 +15,22 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
   <UsingTask TaskName="$(AzureFunctionsTaskNamespace).FuncSdkLog" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
   <UsingTask TaskName="$(AzureFunctionsTaskNamespace).GenerateWorkerConfig" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
 
-  <Import Project="$(MSBuildThisFileDirectory)publish/Azure.Functions.Sdk.Publish.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)extensions/Azure.Functions.Sdk.Extensions.targets" />
-
   <PropertyGroup>
+    <_AzureFunctionsVersionStandardized>$(AzureFunctionsVersion.ToLowerInvariant().Split('-')[0])</_AzureFunctionsVersionStandardized>
+    <_FunctionsRuntimeMajorVersion>$(_AzureFunctionsVersionStandardized.TrimStart('vV'))</_FunctionsRuntimeMajorVersion>
+    <_MinimumSupportedTfmInFunctions>net8.0</_MinimumSupportedTfmInFunctions>
     <_ToolingSuffix Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">net$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)', 1))-isolated</_ToolingSuffix>
     <_ToolingSuffix Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">netfx-isolated</_ToolingSuffix>
     <FunctionsToolingSuffix Condition="'$(FunctionsToolingSuffix)' == ''">$(_ToolingSuffix)</FunctionsToolingSuffix>
   </PropertyGroup>
 
+  <Import Project="$(MSBuildThisFileDirectory)publish/Azure.Functions.Sdk.Publish.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)extensions/Azure.Functions.Sdk.Extensions.targets" />
+
   <Import Project="$(MSBuildFunctionsTargetsPath)Microsoft.Azure.Functions.Designtime.targets"
           Condition="Exists('$(MSBuildFunctionsTargetsPath)Microsoft.Azure.Functions.Designtime.targets')" />
 
   <Target Name="_ValidateFunctionsVersion">
-    <PropertyGroup>
-      <_AzureFunctionsVersionStandardized>$(AzureFunctionsVersion.ToLowerInvariant().Split('-')[0])</_AzureFunctionsVersionStandardized>
-      <_MinimumSupportedTfmInFunctions>net8.0</_MinimumSupportedTfmInFunctions>
-    </PropertyGroup>
-
     <ItemGroup>
       <_AllowedFunctionVersion Include="v3" InSupport="false" /> <!-- Do we want to drop this? -->
       <_AllowedFunctionVersion Include="v4" InSupport="true" />
@@ -63,6 +61,15 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
     </PropertyGroup>
   </Target>
 
+  <Target Name="_ResolveFunctionExecutable" Returns="$(_FunctionsExecutable)">
+    <PropertyGroup>
+      <_FunctionsExecutable>dotnet</_FunctionsExecutable>
+      <!-- If self-contained, get the name of the .exe to run. This also covers PublishAot scenarios. -->
+      <_FunctionsExecutable Condition="'$(SelfContained)' == 'true' AND '%(Identity)' == '$(AppHostIntermediatePath)'">{WorkerRoot}%(None.Link)</_FunctionsExecutable>
+      <_FunctionsExecutable Condition="$(TargetFrameworkIdentifier) == '.NETFramework'">{WorkerRoot}$(TargetName)$(TargetExt)</_FunctionsExecutable>
+    </PropertyGroup>
+  </Target>
+
   <Target Name="_PreGenerateWorkerConfig" BeforeTargets="GetCopyToOutputDirectoryItems;GetCopyToPublishDirectoryItems"
     Condition="'$(DesignTimeBuild)' != 'true'">
     <PropertyGroup>
@@ -76,16 +83,10 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
     </ItemGroup>
   </Target>
 
-  <Target Name="_CoreGenerateWorkerConfig" DependsOnTargets="_PreGenerateWorkerConfig"
+  <Target Name="_CoreGenerateWorkerConfig" DependsOnTargets="_PreGenerateWorkerConfig;_ResolveFunctionExecutable"
     AfterTargets="CoreCompile"
     Inputs="@(IntermediateAssembly)" Outputs="$(_WorkerConfigOutputPath)"
     Condition="'$(DesignTimeBuild)' != 'true'">
-    <PropertyGroup>
-      <_FunctionsExecutable>dotnet</_FunctionsExecutable>
-      <!-- If self-contained, get the name of the .exe to run. This also covers PublishAot scenarios. -->
-      <_FunctionsExecutable Condition="'$(SelfContained)' == 'true' AND '%(Identity)' == '$(AppHostIntermediatePath)'">{WorkerRoot}%(None.Link)</_FunctionsExecutable>
-      <_FunctionsExecutable Condition="$(TargetFrameworkIdentifier) == '.NETFramework'">{WorkerRoot}$(TargetName)$(TargetExt)</_FunctionsExecutable>
-    </PropertyGroup>
     <GenerateWorkerConfig Executable="$(_FunctionsExecutable)" TargetFileName="$(TargetFileName)" OutputPath="$(_WorkerConfigOutputPath)" />
   </Target>
 

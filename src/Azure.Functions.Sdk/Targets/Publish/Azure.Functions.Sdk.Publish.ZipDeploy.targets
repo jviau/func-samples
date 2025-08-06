@@ -9,7 +9,9 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
 ***********************************************************************************************
 -->
 
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project>
+  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).Publish.CreateZipFile" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
+  <UsingTask TaskName="$(AzureFunctionsTaskNamespace).Publish.ZipDeploy" AssemblyFile="$(AzureFunctionsSdkTasksAssembly)" />
 
   <PropertyGroup>
     <_DotNetPublishFiles>
@@ -24,13 +26,11 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
   ***********************************************************************************************
  -->
 
-  <Target Name="CreateZipFile">
-    <CreateZipFileTask
-      FolderToZip="$(PublishIntermediateOutputPath)"
-      ProjectName="$(MSBuildProjectName)"
-      PublishIntermediateTempPath="$(PublishIntermediateTempPath)">
+  <Target Name="CreateZipFile" DependsOnTargets="_ResolveFunctionExecutable">
+    <CreateZipFile FolderToZip="$(PublishIntermediateOutputPath)" ProjectName="$(MSBuildProjectName)"
+      PublishIntermediateTempPath="$(PublishIntermediateTempPath)" Executable="$(_FunctionsExecutable)">
       <Output TaskParameter="CreatedZipPath" PropertyName="ZippedPublishContentsPath"/>
-    </CreateZipFileTask>
+    </CreateZipFile>
   </Target>
 
   <!--
@@ -41,16 +41,12 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
 
   <Target Name="ZipDeploy" DependsOnTargets="CreateZipFile">
     <PropertyGroup>
-      <ZipDeployUserAgent Condition="'$(VisualStudioVersion)' == ''">$(FunctionsSdkVersion)</ZipDeployUserAgent>
-      <ZipDeployUserAgent Condition="'$(VisualStudioVersion)' != ''">$(FunctionsSdkVersion)_VisualStudio_$(VisualStudioVersion)</ZipDeployUserAgent>
+      <_ZipPublishUrl>$(PublishUrl)</_ZipPublishUrl>
+      <_ZipPublishUrl Condition="'$(_ZipPublishUrl)' == ''">https://$(DeployIisAppPath).scm.azurewebsites.net/</_ZipPublishUrl>
     </PropertyGroup>
-    <ZipDeployTask
-      ZipToPublishPath="$(ZippedPublishContentsPath)"
-      DeploymentUsername="$(UserName)"
-      DeploymentPassword="$(Password)"
-      SiteName="$(DeployIisAppPath)"
-      PublishUrl="$(PublishUrl)"
-      UserAgentVersion="$(ZipDeployUserAgent)"
+
+    <ZipDeploy ZipContentsPath="$(ZippedPublishContentsPath)" PublishUrl="$(_ZipPublishUrl)"
+      DeploymentUsername="$(UserName)" DeploymentPassword="$(Password)"
       UseBlobContainerDeploy="$(UseBlobContainerDeploy)"/>
   </Target>
 

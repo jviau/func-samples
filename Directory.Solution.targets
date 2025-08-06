@@ -1,0 +1,8 @@
+<Project>
+
+  <Target Name="RestoreAzureFunctionsSdk" AfterTargets="Restore">
+    <MSBuild Projects="@(ProjectReference)" Targets="GenerateFunctionsExtensionProject"
+      BuildInParallel="$(BuildInParallel)" SkipNonexistentProjects="true" SkipNonexistentTargets="true" />
+  </Target>
+
+</Project>

@@ -149,4 +149,34 @@
         <value>AZFW0107: Target framework '{0}' is not supported by Azure Functions. Minimum target framework is {1}</value>
         <comment>{StrBegin="AZFW0107: "}</comment>
     </data>
+    <data name="Deploy_Status" xml:space="preserve">
+        <value>Deployment status is {0}.</value>
+    </data>
+    <data name="Deploy_StatusWithText" xml:space="preserve">
+        <value>Deployment status is {0}: {1}</value>
+    </data>
+    <data name="Deploy_BeginPublish" xml:space="preserve">
+        <value>Publishing {0} to {1}</value>
+    </data>
+    <data name="Deploy_AsyncDeployment" xml:space="preserve">
+        <value>Asynchronous deployment. Polling status at {0}</value>
+    </data>
+    <data name="Deploy_Failed" xml:space="preserve">
+        <value>Zip deployment to {0} has failed.\n    {1}\n    HTTP Status: {2}\n    Deployment Status: {3}</value>
+    </data>
+    <data name="Deploy_InvalidPublishUrl" xml:space="preserve">
+        <value>The publish url '{0}' is invalid. Publish url must be an absolute HTTP or HTTPS url.</value>
+    </data>
+    <data name="Deploy_ZipNotFound" xml:space="preserve">
+        <value>The provided zip file '{0}' was not found.</value>
+    </data>
+    <data name="Deploy_CompletedSuccess" xml:space="preserve">
+        <value>Successfully published {0} to {1}. Status: {2}</value>
+    </data>
+    <data name="Deploy_PollFailure" xml:space="preserve">
+        <value>Failed to poll '{0}'. HTTP Status: {1}. Retry count {2}/{3}</value>
+    </data>
+    <data name="Deploy_CompletedFailure" xml:space="preserve">
+        <value>Failed to publish {0} to {1}.  Status: {2}</value>
+    </data>
 </root>
