@@ -36,25 +36,21 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
     DependsOnTargets="GetFunctionsExtensionFiles;AssignFunctionsTargetPaths">
   </Target>
 
-  <Target Name="CollectExtensionPackages" Returns="@(AzureFunctionPackageReference)">
+  <Target Name="CollectExtensionPackages" Returns="@(_AzureFunctionPackageReference)">
     <ConvertToAbsolutePath Paths="$(RestoreOutputPath)">
       <Output TaskParameter="AbsolutePaths" PropertyName="RestoreOutputAbsolutePath" />
     </ConvertToAbsolutePath>
     <ResolveExtensionPackages RestoreOutputPath="$(RestoreOutputAbsolutePath)">
-      <Output TaskParameter="ExtensionPackages" ItemName="AzureFunctionPackageReference" />
+      <Output TaskParameter="ExtensionPackages" ItemName="_AzureFunctionPackageReference" />
     </ResolveExtensionPackages>
-    <ValidateExtensionPackages ExtensionPackages="@(AzureFunctionPackageReference)">
-      <Output TaskParameter="FilteredPackages" ItemName="_AzureFunctionPackageReference" />
-    </ValidateExtensionPackages>
-    <ItemGroup>
-      <AzureFunctionPackageReference Remove="@(AzureFunctionPackageReference)" />
-      <AzureFunctionPackageReference Include="@(_AzureFunctionPackageReference)" />
-    </ItemGroup>
   </Target>
 
   <Target Name="WriteExtensionProject">
+    <ValidateExtensionPackages ExtensionPackages="@(_AzureFunctionPackageReference)">
+      <Output TaskParameter="FilteredPackages" ItemName="_ValidatedAzureFunctionPackageReference" />
+    </ValidateExtensionPackages>
     <MakeDir Directories="$(AzureFunctionsExtensionProjectDirectory)" Condition="!Exists('$(AzureFunctionsExtensionProjectDirectory)')" />
-    <WriteExtensionProject ExtensionPackages="@(AzureFunctionPackageReference)" ProjectPath="$(AzureFunctionsExtensionProjectPath)"
+    <WriteExtensionProject ExtensionPackages="@(_ValidatedAzureFunctionPackageReference)" ProjectPath="$(AzureFunctionsExtensionProjectPath)"
       HashFilePath="$(_FunctionsPackageHashPath)" />
   </Target>
 
@@ -73,10 +69,10 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
     Inputs="@(_WorkerAssemblies);$(_FunctionsPackageHashPath)" Outputs="$(_FunctionsUnusedPackagesCachePath)">
     <!-- Using CallTarget so this is not executed in the cache-hit case. -->
     <CallTarget Targets="CollectExtensionPackages" UseResultsCache="true">
-      <Output TaskParameter="TargetOutputs" ItemName="AzureFunctionPackageReference" />
+      <Output TaskParameter="TargetOutputs" ItemName="_AzureFunctionPackageReference" />
     </CallTarget>
 
-    <CalculateUnusedExtensionPackages ExtensionPackages="@(AzureFunctionPackageReference)"
+    <CalculateUnusedExtensionPackages ExtensionPackages="@(_AzureFunctionPackageReference)"
       WorkerAssemblies="@(_WorkerAssemblies)" CachePath="$(_FunctionsUnusedPackagesCachePath)">
       <Output TaskParameter="UnusedExtensionPackages" ItemName="_UnusedAzureFunctionPackageReference" />
     </CalculateUnusedExtensionPackages>

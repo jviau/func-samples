@@ -17,8 +17,11 @@ namespace Azure.Functions.Sdk.Tasks.Publish;
 public class ZipDeployTask(IFileSystem fileSystem)
     : Microsoft.Build.Utilities.Task, ICancelableTask, IDisposable
 {
+    private static readonly TimeSpan DeployTimeout = TimeSpan.FromMinutes(3);
+
     private static readonly ProductInfoHeaderValue SdkUserAgentHeader = new(
         ThisAssembly.Info.Name, ThisAssembly.Info.Version.ToString(fieldCount: 3));
+
     private static readonly ProductInfoHeaderValue OsUserAgentHeader = new(
         $"({RuntimeInformation.OSDescription}; {RuntimeInformation.OSArchitecture})");
 
@@ -66,7 +69,6 @@ public class ZipDeployTask(IFileSystem fileSystem)
     public override bool Execute()
     {
         Log.TaskResources = Strings.ResourceManager;
-
         if (!_fileSystem.File.Exists(ZipContentsPath))
         {
             Log.LogErrorFromResources(nameof(Strings.Deploy_ZipNotFound), ZipContentsPath);
@@ -78,7 +80,9 @@ public class ZipDeployTask(IFileSystem fileSystem)
             return false;
         }
 
-        return DeployAsync(_deploymentClient, _cts.Token).GetAwaiter().GetResult();
+        using CancellationTokenSource timeout = new(DeployTimeout);
+        using CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, timeout.Token);
+        return DeployAsync(_deploymentClient, linked.Token).GetAwaiter().GetResult();
     }
 
     private async Task<bool> DeployAsync(DeploymentClient client, CancellationToken cancellation)

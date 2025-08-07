@@ -22,12 +22,12 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
   </PropertyGroup>
 
   <ItemDefinitionGroup>
-    <AzureFunctionPackageReference>
+    <_AzureFunctionPackageReference>
       <Version />
       <SourcePackageId />
       <IsImplicitlyDefined />
       <CanTrim />
-    </AzureFunctionPackageReference>
+    </_AzureFunctionPackageReference>
   </ItemDefinitionGroup>
 
 </Project>
