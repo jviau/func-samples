@@ -49,11 +49,11 @@ public class ValidateExtensionPackages : Microsoft.Build.Utilities.Task
                 string newVersion = package.GetVersion();
                 if (version != newVersion)
                 {
-                    Log.LogCode(LogCode.Error_ExtensionPackageConflict, package.ItemSpec, version, newVersion);
+                    Log.LogMessage(LogMessage.Error_ExtensionPackageConflict, package.ItemSpec, version, newVersion);
                 }
                 else
                 {
-                    Log.LogCode(LogCode.Warning_ExtensionPackageDuplicate, package.ItemSpec, version);
+                    Log.LogMessage(LogMessage.Warning_ExtensionPackageDuplicate, package.ItemSpec, version);
                 }
             }
             else
@@ -62,7 +62,7 @@ public class ValidateExtensionPackages : Microsoft.Build.Utilities.Task
                 string version = package.GetVersion();
                 if (!NuGet.Versioning.NuGetVersion.TryParse(version, out _))
                 {
-                    Log.LogCode(LogCode.Error_InvalidExtensionPackageVersion, package.ItemSpec, version);
+                    Log.LogMessage(LogMessage.Error_InvalidExtensionPackageVersion, package.ItemSpec, version);
                 }
 
                 uniquePackages[package.ItemSpec] = package;
@@ -72,7 +72,7 @@ public class ValidateExtensionPackages : Microsoft.Build.Utilities.Task
         if (explicitPackages.Count > 0)
         {
             string packageList = "- " + string.Join("\n- ", explicitPackages.Select(p => $"{p.ItemSpec}/{p.GetVersion()}"));
-            Log.LogCode(LogCode.Error_CustomFunctionPackageReferencesNotAllowed, packageList);
+            Log.LogMessage(LogMessage.Error_CustomFunctionPackageReferencesNotAllowed, packageList);
         }
 
         FilteredPackages = [.. uniquePackages.Values];

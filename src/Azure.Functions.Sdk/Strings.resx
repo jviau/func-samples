@@ -117,6 +117,33 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
+    <data name="AZFW0100_Error_CannotRunFuncCli" xml:space="preserve">
+        <value>Unable to launch the Azure Functions Core Tools. Please visit https://aka.ms/azfunc-dotnet-run-error for more details on how to address this problem.</value>
+    </data>
+    <data name="AZFW0101_Error_ExtensionPackageConflict" xml:space="preserve">
+        <value>The AzureFunctionsExtensionPackage {0}/{1} conflicts with existing package  {0}/{2}</value>
+    </data>
+    <data name="AZFW0102_Warning_ExtensionPackageDuplicate" xml:space="preserve">
+        <value>Duplicate extension package found: {0}/{1}</value>
+    </data>
+    <data name="AZFW0103_Error_InvalidExtensionPackageVersion" xml:space="preserve">
+        <value>The Invalid version for AzureFunctionsExtensionPackage '{0}': '{1}'. Ensure the Version metadata on this item is a valid NuGet package version.</value>
+    </data>
+    <data name="AZFW0104_Warning_EndOfLifeFunctionsVersion" xml:space="preserve">
+        <value>Azure Functions '{0}' is out of support and will not receive security updates in the future. Please refer to https://aka.ms/azure-functions-retired-versions for more information on the support policy.</value>
+    </data>
+    <data name="AZFW0105_Error_UsingLegacyFunctionsSdk" xml:space="preserve">
+        <value>Microsoft.NET.Sdk.Functions package is meant to be used with in-proc function apps. Please remove the reference to this package.</value>
+    </data>
+    <data name="AZFW0106_Error_UnknownFunctionsVersion" xml:space="preserve">
+        <value>The AzureFunctionsVersion '{0}' is unknown or not supported.</value>
+    </data>
+    <data name="AZFW0107_Error_UnsupportedTargetFramework" xml:space="preserve">
+        <value>Target framework '{0}' is not supported by Azure Functions. Minimum target framework is {1}</value>
+    </data>
+    <data name="AZFW0108_Error_CustomFunctionPackageReferencesNotAllowed" xml:space="preserve">
+        <value>Custom items in the '_AzureFunctionPackageReference' item group are not allowed.\n{0}</value>
+    </data>
     <data name="Deploy_AsyncDeployment" xml:space="preserve">
         <value>Asynchronous deployment. Polling status at {0}</value>
     </data>
@@ -146,41 +173,5 @@
     </data>
     <data name="Deploy_ZipNotFound" xml:space="preserve">
         <value>The provided zip file '{0}' was not found.</value>
-    </data>
-    <data name="Error_CannotRunFuncCli" xml:space="preserve">
-        <value>AZFW0100: Unable to launch the Azure Functions Core Tools. Please visit https://aka.ms/azfunc-dotnet-run-error for more details on how to address this problem.</value>
-        <comment>{StrBegin="AZFW0100: "}</comment>
-    </data>
-    <data name="Error_ExtensionPackageConflict" xml:space="preserve">
-        <value>AZFW0101: The AzureFunctionsExtensionPackage {0}/{1} conflicts with existing package  {0}/{2}</value>
-        <comment>{StrBegin="AZFW0101: "}</comment>
-    </data>
-    <data name="Error_InvalidExtensionPackageVersion" xml:space="preserve">
-        <value>AZFW0103: The Invalid version for AzureFunctionsExtensionPackage '{0}': '{1}'. Ensure the Version metadata on this item is a valid NuGet package version.</value>
-        <comment>{StrBegin="AZFW0103: "}</comment>
-    </data>
-    <data name="Error_UnknownFunctionsVersion" xml:space="preserve">
-        <value>AZFW0106: The AzureFunctionsVersion '{0}' is unknown or not supported.</value>
-        <comment>{StrBegin="AZFW0106: "}</comment>
-    </data>
-    <data name="Error_UnsupportedTargetFramework" xml:space="preserve">
-        <value>AZFW0107: Target framework '{0}' is not supported by Azure Functions. Minimum target framework is {1}</value>
-        <comment>{StrBegin="AZFW0107: "}</comment>
-    </data>
-    <data name="Error_UsingLegacyFunctionsSdk" xml:space="preserve">
-        <value>AZFW0105: Microsoft.NET.Sdk.Functions package is meant to be used with in-proc function apps. Please remove the reference to this package.</value>
-        <comment>{StrBegin="AZFW0105: "}</comment>
-    </data>
-    <data name="Warning_EndOfLifeFunctionsVersion" xml:space="preserve">
-        <value>AZFW0104: Azure Functions '{0}' is out of support and will not receive security updates in the future. Please refer to https://aka.ms/azure-functions-retired-versions for more information on the support policy.</value>
-        <comment>{StrBegin="AZFW0104: "}</comment>
-    </data>
-    <data name="Warning_ExtensionPackageDuplicate" xml:space="preserve">
-        <value>AZFW0102: Duplicate extension package found: {0}/{1}</value>
-        <comment>{StrBegin="AZFW0102: "}</comment>
-    </data>
-    <data name="Error_CustomFunctionPackageReferencesNotAllowed" xml:space="preserve">
-        <value>AZFW0108: Custom items in the '_AzureFunctionPackageReference' item group are not allowed.\n{0}</value>
-        <comment>{StrBegin="AZFW0108: "}</comment>
     </data>
 </root>

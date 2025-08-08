@@ -14,7 +14,7 @@ public class FuncSdkLog : Microsoft.Build.Utilities.Task
 
     public override bool Execute()
     {
-        Log.LogCode(LogCode.FromId(Resource), Arguments);
+        Log.LogMessage(LogMessage.FromId(Resource), Arguments);
         return !Log.HasLoggedErrors;
     }
 }
